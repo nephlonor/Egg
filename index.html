@@ -217,6 +217,17 @@
       </div>
     </main>
 
+    <script>
+      try {
+        var v = localStorage.getItem("egg.level.v1");
+        if (v !== null) {
+          var n = parseInt(v, 10);
+          if (n >= 0 && n <= 4) {
+            document.getElementById("stage").dataset.level = String(n);
+          }
+        }
+      } catch (e) {}
+    </script>
     <script src="./app.js" type="module"></script>
   </body>
 </html>

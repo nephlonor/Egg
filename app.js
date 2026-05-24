@@ -1,8 +1,28 @@
 const stage = document.getElementById("stage");
 const hint = document.getElementById("hint");
 
+const STORAGE_KEY = "egg.level.v1";
+
+const loadLevel = () => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored === null) return 0;
+    const parsed = parseInt(stored, 10);
+    if (Number.isNaN(parsed) || parsed < 0 || parsed > 4) return 0;
+    return parsed;
+  } catch (_) {
+    return 0;
+  }
+};
+
+const saveLevel = (level) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, String(level));
+  } catch (_) {}
+};
+
 const STATE = {
-  level: 0,
+  level: loadLevel(),
   maxLevel: 4,
   motionEnabled: false,
   motionReceived: false,
@@ -13,6 +33,8 @@ const STATE = {
   cooldownUntil: 0,
 };
 
+stage.dataset.level = String(STATE.level);
+
 const THRESHOLDS = [14, 22, 30, 40];
 const COOLDOWN_MS = 700;
 
@@ -21,6 +43,7 @@ const setLevel = (level) => {
   if (clamped === STATE.level) return;
   STATE.level = clamped;
   stage.dataset.level = String(clamped);
+  saveLevel(clamped);
   if (clamped > 0 && clamped < STATE.maxLevel) {
     stage.classList.remove("shake");
     void stage.offsetWidth;
@@ -37,6 +60,7 @@ const setLevel = (level) => {
 const resetEgg = () => {
   STATE.level = 0;
   stage.dataset.level = "0";
+  saveLevel(0);
   stage.classList.remove("shake");
   stage.classList.remove("reset");
   void stage.offsetWidth;

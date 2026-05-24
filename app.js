@@ -5,6 +5,8 @@ const STATE = {
   level: 0,
   maxLevel: 4,
   motionEnabled: false,
+  motionReceived: false,
+  permissionAttempts: 0,
   permissionAvailable:
     typeof DeviceMotionEvent !== "undefined" &&
     typeof DeviceMotionEvent.requestPermission === "function",
@@ -47,25 +49,30 @@ const resetEgg = () => {
 };
 
 const handleMotion = (event) => {
-  const now = performance.now();
-  if (now < STATE.cooldownUntil) return;
-
   const acc = event.acceleration;
   const accG = event.accelerationIncludingGravity;
   let x = 0,
     y = 0,
-    z = 0;
+    z = 0,
+    haveData = false;
+
   if (acc && (acc.x !== null || acc.y !== null || acc.z !== null)) {
     x = acc.x || 0;
     y = acc.y || 0;
     z = acc.z || 0;
-  } else if (accG) {
-    x = (accG.x || 0) - 0;
-    y = (accG.y || 0) - 0;
+    haveData = true;
+  } else if (accG && (accG.x !== null || accG.y !== null || accG.z !== null)) {
+    x = accG.x || 0;
+    y = accG.y || 0;
     z = (accG.z || 0) - 9.81;
-  } else {
-    return;
+    haveData = true;
   }
+
+  if (!haveData) return;
+  STATE.motionReceived = true;
+
+  const now = performance.now();
+  if (now < STATE.cooldownUntil) return;
 
   const magnitude = Math.sqrt(x * x + y * y + z * z);
   const nextThreshold = THRESHOLDS[STATE.level];
@@ -76,44 +83,65 @@ const handleMotion = (event) => {
   }
 };
 
-const enableMotion = async () => {
-  if (STATE.motionEnabled) return;
-  try {
-    if (STATE.permissionAvailable) {
-      const result = await DeviceMotionEvent.requestPermission();
-      if (result !== "granted") {
-        flashHint("motion permission denied");
-        return;
-      }
-    }
-    window.addEventListener("devicemotion", handleMotion, { passive: true });
-    STATE.motionEnabled = true;
-    fadeHint();
-  } catch (err) {
-    flashHint("motion unavailable");
-  }
-};
-
 let hintTimer;
 const showHint = (text) => {
+  clearTimeout(hintTimer);
   hint.firstElementChild.textContent = text;
   hint.classList.remove("fade");
   hint.classList.add("show");
 };
 const fadeHint = () => {
+  clearTimeout(hintTimer);
   hint.classList.remove("show");
   hint.classList.add("fade");
 };
-const flashHint = (text) => {
-  clearTimeout(hintTimer);
+const flashHint = (text, duration = 2400) => {
   showHint(text);
-  hintTimer = setTimeout(fadeHint, 1800);
+  hintTimer = setTimeout(fadeHint, duration);
 };
 
-if (
-  typeof DeviceMotionEvent !== "undefined" ||
-  "ondevicemotion" in window
-) {
+const attachMotionListener = () => {
+  window.addEventListener("devicemotion", handleMotion, { passive: true });
+  STATE.motionEnabled = true;
+  fadeHint();
+  setTimeout(() => {
+    if (!STATE.motionReceived) {
+      flashHint("no motion data — move the device");
+    }
+  }, 2200);
+};
+
+const enableMotion = async () => {
+  if (STATE.motionEnabled) return;
+
+  if (!STATE.permissionAvailable) {
+    attachMotionListener();
+    return;
+  }
+
+  STATE.permissionAttempts++;
+  let result;
+  try {
+    result = await DeviceMotionEvent.requestPermission();
+  } catch (err) {
+    if (STATE.permissionAttempts < 4) {
+      flashHint("tap again to allow motion");
+    } else {
+      flashHint("motion blocked");
+    }
+    return;
+  }
+
+  if (result === "granted") {
+    attachMotionListener();
+  } else if (result === "denied") {
+    flashHint("motion denied — enable in safari settings");
+  } else {
+    flashHint("tap again to allow motion");
+  }
+};
+
+if (typeof DeviceMotionEvent !== "undefined" || "ondevicemotion" in window) {
   setTimeout(() => {
     if (!STATE.motionEnabled) showHint("tap to enable motion");
   }, 600);
@@ -132,10 +160,6 @@ const TAP_WINDOW = 3000;
 const TARGET_TAPS = 9;
 
 const handleTap = () => {
-  if (!STATE.motionEnabled) {
-    enableMotion();
-  }
-
   const now = performance.now();
   tapState.times.push(now);
   tapState.times = tapState.times.filter((t) => now - t <= TAP_WINDOW);
@@ -173,11 +197,26 @@ const handleTap = () => {
   }
 };
 
-const tapTarget = stage;
-tapTarget.addEventListener("pointerdown", (e) => {
+stage.addEventListener("pointerdown", (e) => {
   if (e.pointerType === "mouse" && e.button !== 0) return;
   handleTap();
 });
+
+document.addEventListener(
+  "click",
+  () => {
+    if (!STATE.motionEnabled) enableMotion();
+  },
+  { passive: true }
+);
+
+document.addEventListener(
+  "touchend",
+  () => {
+    if (!STATE.motionEnabled) enableMotion();
+  },
+  { passive: true }
+);
 
 document.addEventListener(
   "touchmove",

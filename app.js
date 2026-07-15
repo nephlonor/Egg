@@ -1,5 +1,25 @@
 const stage = document.getElementById("stage");
 const hint = document.getElementById("hint");
+const video = document.getElementById("eggvideo");
+
+/*
+ * Renderer mode.
+ * "video"  — the cracking video plays to a checkpoint on every shock.
+ * "photos" — the original still-photo cross-fade.
+ * Switch temporarily with ?photos / ?video in the URL, or permanently by
+ * changing DEFAULT_MODE.
+ */
+const DEFAULT_MODE = "video";
+const query = new URLSearchParams(location.search);
+const MODE = query.has("photos")
+  ? "photos"
+  : query.has("video")
+    ? "video"
+    : DEFAULT_MODE;
+document.body.classList.add(MODE === "video" ? "mode-video" : "mode-photos");
+
+/* Video timestamps (seconds) where each damage level rests. */
+const CHECKPOINTS = [0, 1.5, 3.8, 6.2, 9.9];
 
 const STORAGE_KEY = "egg.level.v1";
 
@@ -36,14 +56,85 @@ const STATE = {
 stage.dataset.level = String(STATE.level);
 
 const THRESHOLDS = [14, 22, 30, 40];
-const COOLDOWN_MS = 700;
+const COOLDOWN_MS = 900;
 
-const setLevel = (level) => {
+/* ---------- video checkpoint engine ---------- */
+
+let playWatcher = null;
+
+const stopWatcher = () => {
+  if (playWatcher !== null) {
+    cancelAnimationFrame(playWatcher);
+    playWatcher = null;
+  }
+};
+
+const playToCheckpoint = (level) => {
+  const target = CHECKPOINTS[level];
+  stopWatcher();
+  const watch = () => {
+    if (video.currentTime >= target || video.ended) {
+      video.pause();
+      if (!video.ended && video.currentTime > target + 0.25) {
+        video.currentTime = target;
+      }
+      playWatcher = null;
+      return;
+    }
+    playWatcher = requestAnimationFrame(watch);
+  };
+  const p = video.play();
+  if (p && p.catch) {
+    p.catch(() => {
+      /* autoplay refused: jump straight to the checkpoint frame */
+      video.currentTime = target;
+    });
+  }
+  playWatcher = requestAnimationFrame(watch);
+};
+
+const seekToCheckpoint = (level) => {
+  stopWatcher();
+  video.pause();
+  const target = CHECKPOINTS[level];
+  if (video.readyState >= 1) {
+    video.currentTime = target;
+  } else {
+    video.addEventListener(
+      "loadedmetadata",
+      () => {
+        video.currentTime = target;
+      },
+      { once: true }
+    );
+  }
+};
+
+if (MODE === "video") {
+  if (STATE.level > 0) seekToCheckpoint(STATE.level);
+  video.addEventListener("ended", () => {
+    stopWatcher();
+  });
+}
+
+/* ---------- level state ---------- */
+
+const setLevel = (level, { animateVideo = true } = {}) => {
   const clamped = Math.max(0, Math.min(STATE.maxLevel, level));
   if (clamped === STATE.level) return;
+  const goingUp = clamped > STATE.level;
   STATE.level = clamped;
   stage.dataset.level = String(clamped);
   saveLevel(clamped);
+
+  if (MODE === "video") {
+    if (goingUp && animateVideo) {
+      playToCheckpoint(clamped);
+    } else {
+      seekToCheckpoint(clamped);
+    }
+  }
+
   if (clamped > 0 && clamped < STATE.maxLevel) {
     stage.classList.remove("shake");
     void stage.offsetWidth;
@@ -61,6 +152,7 @@ const resetEgg = () => {
   STATE.level = 0;
   stage.dataset.level = "0";
   saveLevel(0);
+  if (MODE === "video") seekToCheckpoint(0);
   stage.classList.remove("shake");
   stage.classList.remove("reset");
   void stage.offsetWidth;
@@ -71,6 +163,8 @@ const resetEgg = () => {
     } catch (_) {}
   }
 };
+
+/* ---------- motion ---------- */
 
 const handleMotion = (event) => {
   const acc = event.acceleration;
@@ -173,6 +267,8 @@ if (typeof DeviceMotionEvent !== "undefined" || "ondevicemotion" in window) {
   setTimeout(() => showHint("no motion sensor"), 600);
 }
 
+/* ---------- hidden 9-tap reset ---------- */
+
 const tapState = {
   times: [],
   pendingReset: false,
@@ -260,11 +356,19 @@ document.addEventListener("visibilitychange", () => {
       clearTimeout(tapState.resetTimer);
       tapState.resetTimer = null;
     }
+    if (MODE === "video") {
+      /* if the tab is hidden mid-segment, land on the checkpoint */
+      stopWatcher();
+      video.pause();
+      video.currentTime = CHECKPOINTS[STATE.level];
+    }
   }
 });
 
+/* ---------- debug (desktop / ?debug) ---------- */
+
 if (
-  new URLSearchParams(location.search).has("debug") ||
+  query.has("debug") ||
   location.hostname === "localhost" ||
   location.hostname === "127.0.0.1"
 ) {

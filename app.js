@@ -18,8 +18,14 @@ const MODE = query.has("photos")
     : DEFAULT_MODE;
 document.body.classList.add(MODE === "video" ? "mode-video" : "mode-photos");
 
-/* Video timestamps (seconds) where each damage level rests. */
-const CHECKPOINTS = [0, 1.5, 3.8, 6.2, 9.9];
+/*
+ * Video timestamps (seconds) where each damage level rests. Each point
+ * sits right BEFORE the next crack begins (onsets: ~0.83s, 3.0s, 5.0s,
+ * 6.96s), so a shock shows its crack almost instantly instead of
+ * replaying dead time first. The last point is where the final
+ * collapse has settled.
+ */
+const CHECKPOINTS = [0.75, 2.92, 4.92, 6.88, 8.5];
 
 const STORAGE_KEY = "egg.level.v1";
 

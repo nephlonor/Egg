@@ -110,8 +110,40 @@ const seekToCheckpoint = (level) => {
   }
 };
 
+/*
+ * iOS Safari refuses to paint a video frame until playback has started
+ * once. Prime it with a muted play → pause, then land on the current
+ * checkpoint. Tried on load (muted autoplay is normally allowed) and
+ * retried on the first user gesture if the browser blocked it.
+ */
+let videoPrimed = false;
+
+const primeVideo = () => {
+  if (MODE !== "video" || videoPrimed) return;
+  videoPrimed = true;
+  const p = video.play();
+  if (p && p.then) {
+    p.then(() => {
+      /* leave it alone if a real segment is already playing */
+      if (playWatcher !== null) return;
+      video.pause();
+      video.currentTime = CHECKPOINTS[STATE.level];
+    }).catch(() => {
+      videoPrimed = false;
+    });
+  } else {
+    video.pause();
+    video.currentTime = CHECKPOINTS[STATE.level];
+  }
+};
+
 if (MODE === "video") {
   if (STATE.level > 0) seekToCheckpoint(STATE.level);
+  if (video.readyState >= 1) {
+    primeVideo();
+  } else {
+    video.addEventListener("loadedmetadata", primeVideo, { once: true });
+  }
   video.addEventListener("ended", () => {
     stopWatcher();
   });
@@ -319,6 +351,7 @@ const handleTap = () => {
 
 stage.addEventListener("pointerdown", (e) => {
   if (e.pointerType === "mouse" && e.button !== 0) return;
+  primeVideo();
   handleTap();
 });
 

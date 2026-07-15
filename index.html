@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"
     />
-    <meta name="theme-color" content="#0a0a0f" />
+    <meta name="theme-color" content="#000000" />
     <meta name="color-scheme" content="dark" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
@@ -21,195 +21,25 @@
     <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-title" content="Egg" />
     <meta name="application-name" content="Egg" />
+    <link rel="preload" as="image" href="./images/level-1.jpg" />
+    <link rel="preload" as="image" href="./images/level-2.jpg" />
+    <link rel="preload" as="image" href="./images/level-3.jpg" />
+    <link rel="preload" as="image" href="./images/level-4.jpg" />
   </head>
   <body>
     <div class="bg" aria-hidden="true">
       <div class="orb orb-a"></div>
       <div class="orb orb-b"></div>
-      <div class="orb orb-c"></div>
       <div class="grain"></div>
     </div>
 
     <main class="stage" id="stage" data-level="0">
-      <svg
-        class="egg"
-        id="egg"
-        viewBox="0 0 400 520"
-        preserveAspectRatio="xMidYMid meet"
-        aria-hidden="true"
-      >
-        <defs>
-          <radialGradient id="shell" cx="38%" cy="32%" r="78%">
-            <stop offset="0%" stop-color="#ffffff" />
-            <stop offset="38%" stop-color="#fbf3df" />
-            <stop offset="78%" stop-color="#e9d8b4" />
-            <stop offset="100%" stop-color="#b89a6c" />
-          </radialGradient>
-          <radialGradient id="shellHi" cx="34%" cy="24%" r="40%">
-            <stop offset="0%" stop-color="rgba(255,255,255,0.9)" />
-            <stop offset="100%" stop-color="rgba(255,255,255,0)" />
-          </radialGradient>
-          <radialGradient id="yolk" cx="50%" cy="40%" r="60%">
-            <stop offset="0%" stop-color="#ffe98a" />
-            <stop offset="55%" stop-color="#ffb733" />
-            <stop offset="100%" stop-color="#d97706" />
-          </radialGradient>
-          <linearGradient id="white" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="rgba(255,255,255,0.95)" />
-            <stop offset="100%" stop-color="rgba(255,240,210,0.6)" />
-          </linearGradient>
-          <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="1.2" />
-          </filter>
-          <filter id="drop" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur in="SourceAlpha" stdDeviation="14" />
-            <feOffset dx="0" dy="24" result="off" />
-            <feComponentTransfer>
-              <feFuncA type="linear" slope="0.45" />
-            </feComponentTransfer>
-            <feMerge>
-              <feMergeNode />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-          <clipPath id="eggClip">
-            <path d="M200 40 C 310 40 350 200 350 320 C 350 440 285 490 200 490 C 115 490 50 440 50 320 C 50 200 90 40 200 40 Z" />
-          </clipPath>
-        </defs>
-
-        <g class="egg-body" filter="url(#drop)">
-          <path
-            class="egg-shell"
-            d="M200 40 C 310 40 350 200 350 320 C 350 440 285 490 200 490 C 115 490 50 440 50 320 C 50 200 90 40 200 40 Z"
-            fill="url(#shell)"
-          />
-          <path
-            class="egg-hi"
-            d="M200 40 C 310 40 350 200 350 320 C 350 440 285 490 200 490 C 115 490 50 440 50 320 C 50 200 90 40 200 40 Z"
-            fill="url(#shellHi)"
-          />
-
-          <g class="yolk-peek" clip-path="url(#eggClip)">
-            <ellipse cx="200" cy="295" rx="78" ry="58" fill="url(#yolk)" />
-            <ellipse cx="186" cy="278" rx="22" ry="14" fill="#fff4b8" opacity="0.7" />
-          </g>
-
-          <g class="cracks" stroke="#3a2a14" stroke-linecap="round" stroke-linejoin="round" fill="none">
-            <path
-              class="crack-1"
-              d="M168 150 L182 168 L172 188 L188 206 L178 226 L196 244"
-              stroke-width="1.2"
-              opacity="0"
-            />
-
-            <path
-              class="crack-2 deep"
-              d="M150 130 L172 158 L156 184 L184 212 L168 240 L198 270 L182 300 L214 326"
-              stroke-width="2.4"
-              opacity="0"
-            />
-            <path
-              class="crack-2 deep"
-              d="M172 158 L150 174 M156 184 L132 196 M168 240 L142 252 M182 300 L154 314"
-              stroke-width="1.6"
-              opacity="0"
-            />
-            <path
-              class="crack-2 deep"
-              d="M184 212 L210 198 M198 270 L226 256 M214 326 L240 312"
-              stroke-width="1.4"
-              opacity="0"
-            />
-
-            <path
-              class="crack-3 open"
-              d="M120 110 L168 160 L132 200 L188 246 L150 290 L210 330 L172 380 L240 410"
-              stroke-width="3.4"
-              opacity="0"
-            />
-            <path
-              class="crack-3 open"
-              d="M168 160 L120 170 M132 200 L96 220 M188 246 L228 232 M210 330 L256 318 M172 380 L130 392"
-              stroke-width="2.2"
-              opacity="0"
-            />
-          </g>
-
-          <g class="opening" opacity="0">
-            <path
-              class="gap"
-              d="M120 110 Q 150 150 132 200 Q 180 230 150 290 Q 220 320 172 380 Q 240 400 220 440 Q 180 450 140 430 Q 90 380 80 300 Q 70 220 90 160 Q 100 120 120 110 Z"
-              fill="#1a0e02"
-            />
-            <path
-              class="yolk-drip"
-              d="M120 110 Q 150 150 132 200 Q 180 230 150 290 Q 220 320 172 380 Q 240 400 220 440 Q 180 450 140 430 Q 90 380 80 300 Q 70 220 90 160 Q 100 120 120 110 Z"
-              fill="url(#yolk)"
-              opacity="0.95"
-            />
-            <path
-              class="white-drip"
-              d="M155 460 Q 158 490 150 520 L 200 520 L 200 470 Q 178 462 155 460 Z M 95 430 Q 80 470 70 510 L 130 520 L 130 460 Q 110 442 95 430 Z"
-              fill="url(#white)"
-              opacity="0.85"
-            />
-            <ellipse class="yolk-blob" cx="148" cy="280" rx="58" ry="44" fill="url(#yolk)" />
-            <ellipse class="yolk-hi" cx="132" cy="262" rx="18" ry="12" fill="#fff4b8" opacity="0.7" />
-          </g>
-        </g>
-      </svg>
-
-      <div class="scramble" id="scramble" aria-hidden="true">
-        <svg viewBox="0 0 1200 1200" preserveAspectRatio="xMidYMid slice">
-          <defs>
-            <radialGradient id="yolkBlob" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stop-color="#ffe07a" />
-              <stop offset="60%" stop-color="#ffb023" />
-              <stop offset="100%" stop-color="#c8730a" />
-            </radialGradient>
-            <radialGradient id="whiteBlob" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stop-color="rgba(255,255,255,0.98)" />
-              <stop offset="70%" stop-color="rgba(255,243,210,0.85)" />
-              <stop offset="100%" stop-color="rgba(220,196,150,0.0)" />
-            </radialGradient>
-            <filter id="goo">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="18" result="b" />
-              <feColorMatrix
-                in="b"
-                mode="matrix"
-                values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -10"
-              />
-            </filter>
-          </defs>
-          <g filter="url(#goo)">
-            <ellipse cx="240" cy="280" rx="220" ry="180" fill="url(#whiteBlob)" />
-            <ellipse cx="600" cy="200" rx="280" ry="200" fill="url(#whiteBlob)" />
-            <ellipse cx="980" cy="320" rx="240" ry="200" fill="url(#whiteBlob)" />
-            <ellipse cx="180" cy="700" rx="260" ry="210" fill="url(#whiteBlob)" />
-            <ellipse cx="620" cy="780" rx="320" ry="240" fill="url(#whiteBlob)" />
-            <ellipse cx="1020" cy="780" rx="240" ry="200" fill="url(#whiteBlob)" />
-            <ellipse cx="380" cy="1040" rx="260" ry="180" fill="url(#whiteBlob)" />
-            <ellipse cx="860" cy="1080" rx="260" ry="180" fill="url(#whiteBlob)" />
-
-            <ellipse cx="320" cy="360" rx="90" ry="70" fill="url(#yolkBlob)" />
-            <ellipse cx="700" cy="280" rx="120" ry="90" fill="url(#yolkBlob)" />
-            <ellipse cx="940" cy="440" rx="80" ry="64" fill="url(#yolkBlob)" />
-            <ellipse cx="260" cy="780" rx="100" ry="78" fill="url(#yolkBlob)" />
-            <ellipse cx="580" cy="860" rx="140" ry="100" fill="url(#yolkBlob)" />
-            <ellipse cx="980" cy="820" rx="90" ry="70" fill="url(#yolkBlob)" />
-            <ellipse cx="440" cy="1080" rx="110" ry="80" fill="url(#yolkBlob)" />
-            <ellipse cx="820" cy="1100" rx="100" ry="76" fill="url(#yolkBlob)" />
-          </g>
-          <g class="shell-bits" fill="#efe1c2" opacity="0.9">
-            <path d="M120 120 l40 -10 l20 30 l-30 25 z" />
-            <path d="M780 140 l50 5 l-10 40 l-40 -8 z" />
-            <path d="M1080 580 l40 20 l-15 35 l-40 -10 z" />
-            <path d="M520 520 l36 -22 l28 22 l-18 28 z" />
-            <path d="M240 980 l50 -8 l8 38 l-44 8 z" />
-            <path d="M900 980 l38 12 l-12 38 l-36 -8 z" />
-            <path d="M600 1060 l30 -6 l14 28 l-30 14 z" />
-          </g>
-        </svg>
+      <div class="egg-view" aria-hidden="true">
+        <img class="lvl l0" src="./images/level-0.jpg" alt="" draggable="false" decoding="async" />
+        <img class="lvl l1" src="./images/level-1.jpg" alt="" draggable="false" decoding="async" />
+        <img class="lvl l2" src="./images/level-2.jpg" alt="" draggable="false" decoding="async" />
+        <img class="lvl l3" src="./images/level-3.jpg" alt="" draggable="false" decoding="async" />
+        <img class="lvl l4" src="./images/level-4.jpg" alt="" draggable="false" decoding="async" />
       </div>
 
       <div class="hint" id="hint" role="status" aria-live="polite">

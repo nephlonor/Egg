@@ -229,12 +229,6 @@ const setLevel = (level, { animateVideo = true } = {}) => {
     void stage.offsetWidth;
     stage.classList.add("shake");
   }
-  if (navigator.vibrate) {
-    const patterns = [[], [12], [22], [40], [60, 30, 80]];
-    try {
-      navigator.vibrate(patterns[clamped] || 0);
-    } catch (_) {}
-  }
 };
 
 const resetEgg = () => {

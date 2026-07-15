@@ -35,6 +35,17 @@
 
     <main class="stage" id="stage" data-level="0">
       <div class="egg-view" aria-hidden="true">
+        <video
+          class="egg-video"
+          id="eggvideo"
+          muted
+          playsinline
+          preload="auto"
+          disablepictureinpicture
+        >
+          <source src="./videos/egg-crack.mp4" type="video/mp4" />
+          <source src="./videos/egg-crack.webm" type="video/webm" />
+        </video>
         <img class="lvl l0" src="./images/level-0.jpg" alt="" draggable="false" decoding="async" />
         <img class="lvl l1" src="./images/level-1.jpg" alt="" draggable="false" decoding="async" />
         <img class="lvl l2" src="./images/level-2.jpg" alt="" draggable="false" decoding="async" />

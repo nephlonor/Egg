@@ -146,6 +146,32 @@ body {
   will-change: opacity, transform;
 }
 
+.egg-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  pointer-events: none;
+}
+
+/* landscape / desktop: don't blow the portrait video up, frame it instead */
+@media (min-aspect-ratio: 1/1) {
+  .egg-video {
+    object-fit: contain;
+  }
+}
+
+/* mode switching: video is the default renderer, photos are the fallback */
+body.mode-photos .egg-video {
+  display: none;
+}
+
+body.mode-video .lvl {
+  display: none;
+}
+
 /* final state fills the whole display */
 .l4 {
   object-fit: cover;

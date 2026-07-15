@@ -58,7 +58,47 @@ stage.dataset.level = String(STATE.level);
 const THRESHOLDS = [14, 22, 30, 40];
 const COOLDOWN_MS = 900;
 
+/* ---------- audio (Web Audio so gain ramps work on iOS too) ---------- */
+
+let audioCtx = null;
+let segGain = null;
+
+const unlockAudio = () => {
+  if (MODE !== "video") return;
+  try {
+    if (!audioCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) {
+        audioCtx = new AC();
+        const src = audioCtx.createMediaElementSource(video);
+        segGain = audioCtx.createGain();
+        segGain.gain.value = 0;
+        src.connect(segGain);
+        segGain.connect(audioCtx.destination);
+      }
+    }
+    if (audioCtx && audioCtx.state === "suspended") {
+      audioCtx.resume();
+    }
+    video.muted = false;
+  } catch (_) {}
+};
+
+const setSegGain = (v) => {
+  if (segGain) {
+    segGain.gain.value = v;
+  } else {
+    /* fallback for browsers without Web Audio (no-op on iOS) */
+    try {
+      video.volume = v;
+    } catch (_) {}
+  }
+};
+
 /* ---------- video checkpoint engine ---------- */
+
+const FADE_OUT_S = 0.45;
+const FADE_IN_S = 0.12;
 
 let playWatcher = null;
 
@@ -71,11 +111,21 @@ const stopWatcher = () => {
 
 const playToCheckpoint = (level) => {
   const target = CHECKPOINTS[level];
+  const start = video.currentTime;
   stopWatcher();
   const watch = () => {
-    if (video.currentTime >= target || video.ended) {
+    const t = video.currentTime;
+    /* ramp in quickly, fade out into the pause so the stop isn't abrupt */
+    setSegGain(
+      Math.max(
+        0,
+        Math.min(1, (t - start) / FADE_IN_S, (target - t) / FADE_OUT_S)
+      )
+    );
+    if (t >= target || video.ended) {
+      setSegGain(0);
       video.pause();
-      if (!video.ended && video.currentTime > target + 0.25) {
+      if (!video.ended && t > target + 0.25) {
         video.currentTime = target;
       }
       playWatcher = null;
@@ -86,8 +136,14 @@ const playToCheckpoint = (level) => {
   const p = video.play();
   if (p && p.catch) {
     p.catch(() => {
-      /* autoplay refused: jump straight to the checkpoint frame */
-      video.currentTime = target;
+      /* sound blocked: retry muted rather than skipping the animation */
+      video.muted = true;
+      const retry = video.play();
+      if (retry && retry.catch) {
+        retry.catch(() => {
+          video.currentTime = target;
+        });
+      }
     });
   }
   playWatcher = requestAnimationFrame(watch);
@@ -95,6 +151,7 @@ const playToCheckpoint = (level) => {
 
 const seekToCheckpoint = (level) => {
   stopWatcher();
+  setSegGain(0);
   video.pause();
   const target = CHECKPOINTS[level];
   if (video.readyState >= 1) {
@@ -358,6 +415,7 @@ stage.addEventListener("pointerdown", (e) => {
 document.addEventListener(
   "click",
   () => {
+    unlockAudio();
     if (!STATE.motionEnabled) enableMotion();
   },
   { passive: true }
@@ -366,6 +424,7 @@ document.addEventListener(
 document.addEventListener(
   "touchend",
   () => {
+    unlockAudio();
     if (!STATE.motionEnabled) enableMotion();
   },
   { passive: true }
@@ -392,6 +451,7 @@ document.addEventListener("visibilitychange", () => {
     if (MODE === "video") {
       /* if the tab is hidden mid-segment, land on the checkpoint */
       stopWatcher();
+      setSegGain(0);
       video.pause();
       video.currentTime = CHECKPOINTS[STATE.level];
     }
